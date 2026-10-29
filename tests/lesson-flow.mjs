@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+const base=process.env.TEST_BASE||'http://127.0.0.1:8811/api/state';
+let classId;
+async function req(user,action,body={},expected=200){let url=base;const options={headers:{'content-type':'application/json','oai-authenticated-user-id':user,'oai-authenticated-user-email':`${user}@example.test`}};if(action){options.method='POST';options.body=JSON.stringify({action,classId,...body})}else if(classId)url+='?class='+classId;const res=await fetch(url,options);const json=await res.json();assert.equal(res.status,expected,JSON.stringify(json));return json;}
+classId=(await req('flow-fac','create',{name:'Lesson flow verification'})).id;
+let fac=await req('flow-fac');assert.ok(fac.material.published);assert.equal(fac.material.sources.length,4);
+await req('flow-student','join',{code:fac.class.code});await req('flow-other','join',{code:fac.class.code});
+await req('flow-student','stage',{stage:'Argument mapping'},403);
+await req('flow-fac','stage',{stage:'Initial judgment'});
+const judgment={Decision:'Qualify','Main reason':'Small sample','What would you most want to check?':'Non-LinkedIn applicants'};
+await req('flow-student','save',{activity:'judgment',attempt:'initial',answers:judgment,submit:true});
+await req('flow-student','presence',{view:'judgment',field:'Main reason'});fac=await req('flow-fac');assert.equal(fac.members.find(m=>m.owner==='flow-student').field,'Main reason');assert.equal((await req('flow-other')).members.length,0);
+await req('flow-fac','stage',{stage:'Concepts'});await req('flow-fac','slide',{slide:3});let student=await req('flow-student');assert.equal(student.class.slide,3);assert.equal(student.class.stage,'Concepts');
+await req('flow-student','slide',{slide:2},403);await req('flow-student','save',{activity:'map',attempt:'initial',answers:{}},403);
+await req('flow-fac','stage',{stage:'Argument mapping'});
+const fields=['Main conclusion','Supporting reason 1','Source for reason 1','Supporting reason 2','Source for reason 2','What the sources directly establish','What the recommendation additionally infers','One unstated assumption','Why the conclusion depends on that assumption'];const map=Object.fromEntries(fields.map(f=>[f,f.startsWith('Source')?'P1':'My interpretation']));
+await req('flow-student','save',{activity:'map',attempt:'initial',answers:map});await req('flow-fac','stage',{stage:'Break'});await req('flow-student','save',{activity:'map',attempt:'initial',answers:map},403);student=await req('flow-student');assert.equal(student.responses.find(r=>r.activity==='map').status,'draft');
+await req('flow-fac','stage',{stage:'Argument mapping'});await req('flow-student','save',{activity:'map',attempt:'initial',answers:map,submit:true});
+await req('flow-fac','stage',{stage:'Comparison'});fac=await req('flow-fac');await req('flow-fac','share',{responseId:fac.responses.find(r=>r.activity==='map').id});
+const comparison={'One agreement':'The sample is small','One difference':'Whether preference predicts completion','Use the packet to resolve the difference, or record remaining ambiguity':'P2 does not measure real-world completion.'};await req('flow-student','save',{activity:'comparison',attempt:'initial',answers:comparison,submit:true});
+const other=await req('flow-other');assert.equal(other.responses.length,0);assert.equal(other.shared.length,1);assert.equal(other.shared[0].owner,undefined);
+await req('flow-fac','stage',{stage:'Revision'});await req('flow-student','save',{activity:'map',attempt:'revision',answers:{...map,'Main conclusion':'A more careful reconstruction','Revision explanation':'I separated preference from completion.'},submit:true});
+await req('flow-fac','stage',{stage:'Exit retrieval'});await req('flow-student','save',{activity:'exit',attempt:'initial',answers:{'Explain evidence versus inference in your own words, without notes':'Evidence is information; inference extends from information to a further conclusion.'},submit:true});
+student=await req('flow-student');assert.equal(student.responses.find(r=>r.activity==='map'&&r.attempt==='initial').answers['Main conclusion'],'My interpretation');assert.equal(student.responses.length,5);
+await req('flow-student','save',{activity:'exit',attempt:'initial',answers:{}},409);
+await req('flow-fac','stage',{stage:'Baseline'});await req('flow-other','save',{activity:'judgment',attempt:'initial',answers:judgment},403);
+await req('flow-fac','stage',{stage:'Argument mapping'});
+console.log(JSON.stringify({passed:true,classId,code:fac.class.code,checks:['new-class materials','role permissions','judgment','presence privacy','synchronized slides','stage gates','break draft preservation','comparison submission','anonymous sharing','immutable original and revision','exit retrieval']}));

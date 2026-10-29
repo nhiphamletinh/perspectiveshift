@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-const base='http://127.0.0.1:8787/api/state';let cid;
+const base=process.env.TEST_BASE||'http://127.0.0.1:8787/api/state';let cid;
 async function request(user,action,body={},expected=200){const opts={headers:{'oai-authenticated-user-id':user,'oai-authenticated-user-email':`${user}@example.test`,'content-type':'application/json'}};let url=base;if(action){opts.method='POST';opts.body=JSON.stringify({action,classId:cid,...body})}else if(cid)url+='?class='+cid;const r=await fetch(url,opts),d=await r.json();assert.equal(r.status,expected,JSON.stringify(d));return d;}
 const noAuth=await fetch(base);assert.equal(noAuth.status,401);
 cid=(await request('fac','create',{name:'QA Class'})).id;

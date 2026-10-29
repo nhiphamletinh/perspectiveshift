@@ -30,3 +30,17 @@ The supplied CampusBridge recommendation and P1–P4 sources, AI writing-assista
 ## Verification
 
 TypeScript and production build checks, local API tests, and browser checks of facilitator navigation, learner practice forms, draft saves, keyboard submission, post-submission feedback, and mobile layout were performed. Full hosted sign-in, cross-device use, and the requested walkthrough with separate real accounts remain to be verified after the intended learner accounts have Site access. No automated scoring or LLM integration is present.
+
+## Lesson-plan control flow
+
+Opening a class now opens its 90-minute Lesson Plan for facilitators, and the current interactive activity for learners. Each expandable step exposes its materials, Start activity, and Try student screen. New classes include the supplied material version published and ready to use. Existing class records and attempts are preserved.
+
+The plan covers external baseline, initial judgment, concepts, individual mapping, break, comparison, revision, and exit retrieval. Assessment A is explicitly external because its content has not been provided. No baseline assessment or scoring has been invented.
+
+Start activity updates the server-controlled stage; learner workspaces follow within the polling interval. Concepts use a shared slide index. The teaching deck excludes roster information and private notes. Comparison and exit retrieval save separate private attempts.
+
+The facilitator monitor refreshes every two seconds. Learners send an activity/field presence heartbeat every five seconds, and drafts autosave separately. Presence is class-authorized and is not shown to other learners. It records the app field and recent presence, not a screen recording or cursor tracking.
+
+Try student screen is an interactive, clearly labeled local demo. It supports input, save, submit, and prefilled revision without creating real learner submissions. Demo attempts reset when a different class is selected or the page is reloaded; real learner attempts persist in D1.
+
+The local API suite `tests/lesson-flow.mjs` verifies activity gates, presence privacy, synchronized slides, comparison, exit retrieval, and immutable revisions. Set TEST_BASE to the localhost production-preview API URL. The development sign-in helper uses a single local identity, so multi-identity tests use the built Worker preview.
