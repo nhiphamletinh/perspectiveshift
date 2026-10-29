@@ -1,6 +1,6 @@
-export const stages=['Waiting','Baseline','Initial judgment','Concepts','Argument mapping','Break','Comparison','Revision','Exit retrieval','Closed'];
+export const stages=['Waiting','Baseline','Initial judgment','Concepts','Argument mapping','Break','Comparison','Debrief','Revision','Exit retrieval','Closed'];
 export const mapFields=['Main conclusion','Supporting reason 1','Source for reason 1','Supporting reason 2','Source for reason 2','What the sources directly establish','What the recommendation additionally infers','One unstated assumption','Why the conclusion depends on that assumption'];
-export const judgmentFields=['Decision','Main reason','What would you most want to check?'];
+export const judgmentFields=['Decision','Main reason'];
 export const practices=[
   {
     "title": "Retrieve and distinguish",

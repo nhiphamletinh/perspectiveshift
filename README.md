@@ -44,3 +44,16 @@ The facilitator monitor refreshes every two seconds. Learners send an activity/f
 Try student screen is an interactive, clearly labeled local demo. It supports input, save, submit, and prefilled revision without creating real learner submissions. Demo attempts reset when a different class is selected or the page is reloaded; real learner attempts persist in D1.
 
 The local API suite `tests/lesson-flow.mjs` verifies activity gates, presence privacy, synchronized slides, comparison, exit retrieval, and immutable revisions. Set TEST_BASE to the localhost production-preview API URL. The development sign-in helper uses a single local identity, so multi-identity tests use the built Worker preview.
+
+
+## Complete delivery guide update
+
+The 90-minute flow now includes joining (5), NotePilot baseline (15), CampusBridge judgment (5), concepts (15), mapping (15), break (5), comparison (15), debrief (5), revision (5), and exit retrieval (5). Debrief is read-only; revision is released separately.
+
+Presentation View opens in a separate named window and follows server stage/slide state. Private guidance, roster, answer guidance, and delivery records stay in Facilitator View. The join screen generates its QR locally. Learners supply a display name and code after sign-in. A private Site requires Site access in addition to the classroom code.
+
+Baseline is now included, with no automatic feedback and no peer sharing. Server responses withhold CampusBridge before the hook, reference/example content before concepts and during exit, and unreleased practice content. Only submitted maps can be shared. Facilitators preview and edit the anonymous shared copy; originals remain unchanged. All explicitly shared maps appear on the discussion board.
+
+Stage changes preserve local text; if a response is unsaved the learner can save before following the new activity. Existing drafts remain saveable after a stage closes; submissions obey stage rules. Late initial maps are marked after peer-example exposure, not simply after a break. A printable learner fallback is generated only in the facilitator view, without answer guidance. The guide did not supply a baseline rubric; use an approved external rubric for later review.
+
+Tests: `tests/api.mjs` covers persistence, permissions, practices and immutable attempts; `tests/lesson-flow.mjs` covers baseline, release gates, slide sync, break draft preservation, redacted sharing, read-only debrief gate, revisions and the three-field exit task. Use TEST_BASE to point at a locally authenticated Worker. Test identity injection is local-only and is not deployed.
