@@ -57,3 +57,7 @@ Baseline is now included, with no automatic feedback and no peer sharing. Server
 Stage changes preserve local text; if a response is unsaved the learner can save before following the new activity. Existing drafts remain saveable after a stage closes; submissions obey stage rules. Late initial maps are marked after peer-example exposure, not simply after a break. A printable learner fallback is generated only in the facilitator view, without answer guidance. The guide did not supply a baseline rubric; use an approved external rubric for later review.
 
 Tests: `tests/api.mjs` covers persistence, permissions, practices and immutable attempts; `tests/lesson-flow.mjs` covers baseline, release gates, slide sync, break draft preservation, redacted sharing, read-only debrief gate, revisions and the three-field exit task. Use TEST_BASE to point at a locally authenticated Worker. Test identity injection is local-only and is not deployed.
+
+## Course welcome
+
+The opening Waiting stage now shows a complete course welcome to learners: joining instructions, class/display-name confirmation, all four proposed units with the supplied core content and intended applications, and a Lesson 1 introduction. Overview retains the same welcome for later reference. Presentation View shows the joining QR/code followed by the welcome and syllabus. The first lesson-plan step is “Welcome, syllabus, and check-in”; starting it controls the learner opening screen. No lesson cases or answer guidance are released by this addition.
