@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+const base='http://127.0.0.1:8787/api/state';let cid;
+async function request(user,action,body={},expected=200){const opts={headers:{'oai-authenticated-user-id':user,'oai-authenticated-user-email':`${user}@example.test`,'content-type':'application/json'}};let url=base;if(action){opts.method='POST';opts.body=JSON.stringify({action,classId:cid,...body})}else if(cid)url+='?class='+cid;const r=await fetch(url,opts),d=await r.json();assert.equal(r.status,expected,JSON.stringify(d));return d;}
+const noAuth=await fetch(base);assert.equal(noAuth.status,401);
+cid=(await request('fac','create',{name:'QA Class'})).id;
+let f=await request('fac');const code=f.class.code;
+await request('one','join',{code});await request('two','join',{code});
+await request('outsider',null,{},403);await request('one','stage',{stage:'Revision'},403);
+const m=f.materials[0];m.recommendation='Test recommendation';m.sources.forEach(s=>{s.title='Test source';s.text='Test observation'});m.example='Test worked example';
+await request('fac','publish',{material:m});
+let l=await request('one');assert.equal(l.material.notes,undefined);assert.equal(l.material.practices[0].feedback,undefined);assert.ok(!JSON.stringify(l).includes('The observation concerns three beta testers.'));
+const judgment={Decision:'Qualify','Main reason':'Limited evidence','What would you most want to check?':'Broader samples'};
+await request('one','save',{activity:'judgment',attempt:'initial',answers:judgment},403);
+await request('fac','stage',{stage:'Initial judgment'});
+await request('one','save',{activity:'judgment',attempt:'initial',answers:judgment});await request('one','save',{activity:'judgment',attempt:'initial',answers:judgment,submit:true});
+await request('one','save',{activity:'judgment',attempt:'initial',answers:{...judgment,Decision:'Accept'}},409);
+await request('one','save',{activity:'map',attempt:'initial',answers:{}},403);
+await request('fac','stage',{stage:'Argument mapping'});
+const fields=['Main conclusion','Supporting reason 1','Source for reason 1','Supporting reason 2','Source for reason 2','What the sources directly establish','What the recommendation additionally infers','One unstated assumption','Why the conclusion depends on that assumption'];const answers=Object.fromEntries(fields.map(x=>[x,x.startsWith('Source')?'P1':'I cannot identify one']));
+await request('one','save',{activity:'map',attempt:'initial',answers,submit:true});
+let two=await request('two');assert.equal(two.responses.length,0);assert.equal(two.shared.length,0);
+f=await request('fac');const map=f.responses.find(r=>r.activity==='map');
+await request('fac','share',{responseId:map.id});two=await request('two');assert.equal(two.shared.length,0);
+await request('fac','stage',{stage:'Comparison'});two=await request('two');assert.equal(two.shared.length,1);assert.equal(two.shared[0].owner,undefined);assert.equal(two.shared[0].data,undefined);
+await request('two','save',{activity:'judgment',attempt:'initial',answers:judgment,submit:true});two=await request('two');assert.equal(two.responses[0].late,true);
+await request('fac','stage',{stage:'Revision'});await request('one','save',{activity:'map',attempt:'revision',answers:{...answers,'Main conclusion':'Revised conclusion','Revision explanation':'Reconsidered evidence'},submit:true});l=await request('one');assert.equal(l.responses.find(r=>r.activity==='map'&&r.attempt==='initial').answers['Main conclusion'],'I cannot identify one');assert.equal(l.responses.find(r=>r.activity==='map'&&r.attempt==='revision').answers['Main conclusion'],'Revised conclusion');
+for(const activity of ['practice1','practice2']){await request('one','save',{activity,attempt:'initial',answers:{}},403);await request('fac','assignment',{activity,release:new Date(Date.now()+86400000).toISOString()});await request('one','save',{activity,attempt:'initial',answers:{}},403);await request('fac','assignment',{activity,release:new Date(Date.now()-86400000).toISOString(),due:new Date(Date.now()-1000).toISOString()});l=await request('one');assert.equal(l.feedback[activity],undefined);const p=l.material.practices[Number(activity.slice(-1))-1];await request('one','save',{activity,attempt:'initial',answers:Object.fromEntries(p.fields.map(f=>[f,'My independent reasoning'])),submit:true});l=await request('one');assert.ok(l.feedback[activity]);assert.equal(l.responses.find(r=>r.activity===activity).late,true);two=await request('two');assert.equal(two.feedback[activity],undefined);await request('one','viewFeedback',{activity});await request('one','save',{activity,attempt:'revision',answers:{Revision:'My feedback-supported revision'},submit:true});}
+await request('fac','stage',{stage:'Closed'});await request('two','save',{activity:'map',attempt:'initial',answers},403);l=await request('one');assert.equal(l.responses.length,7);assert.equal(l.feedbackViews.length,2);
+await request('fac','comment',{responseId:map.id,text:'Private comment'});l=await request('one');assert.equal(l.comments.length,1);two=await request('two');assert.equal(two.comments.length,0);
+console.log('PASS: auth, membership, role isolation, stage gates, immutable submissions, late work, anonymous sharing, both practice gates and revisions, feedback views, private comments, persistence across independent requests.');
