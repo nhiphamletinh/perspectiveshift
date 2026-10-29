@@ -14,14 +14,14 @@ Install using the Sites install-dependencies helper, then run `npm run db:genera
 
 Local preview does not simulate ChatGPT sign-in. `tests/api.mjs` uses three distinct simulated identities against a localhost Worker, plus an unaffiliated identity. It creates isolated local QA classes. Run it only against the local preview with its D1 migration applied. No test identity override is shipped in the application.
 
-## Materials needed
+## Included Lesson 1 materials
 
-The specification did not contain the original CampusBridge recommendation, P1–P4 source texts, or developed AI writing-assistant example. These are clearly marked placeholders. The application prevents publishing them until they are replaced. A general reference sheet and both supplied practice examples and explanations are included. The facilitator can edit all content and private guidance before publishing.
+The supplied CampusBridge recommendation and P1–P4 sources, AI writing-assistant worked example, learner reference, individual mapping prompts, pair discussion, private facilitator guidance, dashboard practice and CaptionAid practice are included. Prepared practice feedback remains submission-gated. New classes start with these materials ready for facilitator review and publication.
 
 ## Classroom setup
 
 1. Sign in and create a class.
-2. Edit missing materials in Lesson Setup and publish a version.
+2. Review the supplied materials in Lesson Setup and publish a version.
 3. Arrange Site access for the intended learners through Sites sharing. A new Site remains owner-private by default; a class code does not bypass that hosting boundary.
 4. Learners sign in with their own accounts and join using the class code.
 5. Advance stages using Live Session. Explicitly select submitted maps in Responses to share them. Opening a private response does not share it.
